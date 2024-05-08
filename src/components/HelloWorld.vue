@@ -1,7 +1,7 @@
 <script setup>
 import ZoomVideo from "@zoom/videosdk";
-import uitoolkit from "@zoom/videosdk-ui-toolkit";
-import "@zoom/videosdk-ui-toolkit/dist/videosdk-ui-toolkit.css";
+// import uitoolkit from "@zoom/videosdk-ui-toolkit";
+// import "@zoom/videosdk-ui-toolkit/dist/videosdk-ui-toolkit.css";
 import { ref } from "vue";
 
 var sessionContainer;
@@ -47,51 +47,63 @@ function getVideoSDKJWT() {
     });
 }
 
-function joinSession() {
-  uitoolkit.joinSession(sessionContainer, config.value);
-
-  uitoolkit.onSessionClosed(sessionClosed);
-}
-
-var sessionClosed = () => {
-  console.log("session closed");
-  uitoolkit.closeSession(sessionContainer);
-
-  document.getElementById("join-flow").style.display = "block";
-};
-
-// const client = ZoomVideo.createClient();
-// const stream = ref();
 // function joinSession() {
-//   client.init("en-US", "Global", { patchJsMedia: true }).then(() => {
-//     client
-//       .join(
-//         config.value.sessionName,
-//         config.value.videoSDKJWT,
-//         config.value.userName
-//       )
-//       .then(() => {
-//         stream.value = client.getMediaStream();
-//         renderVideo(stream.value);
-//       });
-//   });
+//   uitoolkit.joinSession(sessionContainer, config.value);
+
+//   uitoolkit.onSessionClosed(sessionClosed);
 // }
-// const nodes = ref();
-// async function renderVideo(stream) {
-//   stream.startVideo().then(() => {
-//     stream
-//       .attachVideo(client.getCurrentUserInfo().userId, 300)
-//       .then((userVideo) => {
-//         nodes.value = userVideo;
-//         // document.querySelector("video-player-container").appendChild(userVideo);
-//       });
-//   });
-// }
+
+// var sessionClosed = () => {
+//   console.log("session closed");
+//   uitoolkit.closeSession(sessionContainer);
+
+//   document.getElementById("join-flow").style.display = "block";
+// };
+
+const client = ZoomVideo.createClient();
+const stream = ref();
+function joinSession() {
+  client.init("en-US", "Global", { patchJsMedia: true }).then(() => {
+    client
+      .join(
+        config.value.sessionName,
+        config.value.videoSDKJWT,
+        config.value.userName
+      )
+      .then(() => {
+        stream.value = client.getMediaStream();
+        renderVideo(stream.value);
+      });
+  });
+}
+const nodes = ref();
+async function renderVideo(stream) {
+  // stream.startVideo().then(() => {
+  //   stream
+  //     .attachVideo(client.getCurrentUserInfo().userId, 300)
+  //     .then((userVideo) => {
+  //       nodes.value = userVideo;
+  //       // document.querySelector("video-player-container").appendChild(userVideo);
+  //     });
+  // });
+
+    client.getAllUser().forEach((user) => {
+      if (user.bVideoOn) {
+        stream.attachVideo(user.userId, 3).then((userVideo) => {
+          console.log(userVideo)
+          document
+            .getElementById('video-player-container')
+            .appendChild(userVideo)
+        })
+      }
+    })
+
+}
 </script>
 
 <template>
   <main>
-    <div class="" style="display: flex">
+    <div class="" style="display: flex; margin: 10px 0; gap: 10px;">
       <div class="">
         <label>Role</label>
         <input v-model="role" />
@@ -112,7 +124,7 @@ var sessionClosed = () => {
       <button @click="getVideoSDKJWT">Join Session</button>
     </div>
 
-    <video-player-container v-html="nodes"></video-player-container>
+    <div id="video-player-container"></div>
 
     <div id="sessionContainer"></div>
   </main>
